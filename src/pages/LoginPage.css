@@ -1,0 +1,98 @@
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #f5f6f7;
+}
+
+.login-container {
+    position: relative;
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    align-items: flex-start;
+    padding: 5vh 5vw;
+    box-sizing: border-box;
+}
+
+.login-box {
+    flex: 0 0 25vw;
+    max-width: 400px;
+    min-width: 260px;
+}
+
+.login-box h2 {
+    font-size: 1.5vw;
+    margin-bottom: 2vh;
+    min-font-size: 16px;
+}
+
+.login-box input {
+    width: 80%;
+    padding: 1vh 0.8vw;
+    margin-bottom: 1vh;
+    font-size: 1vw;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.login-box button {
+    width: 80%;
+    padding: 1vh 0;
+    background-color: #007acc;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1vw;
+    margin-bottom: 1vh;
+}
+
+.login-options {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 0.9vw;
+    gap: 0.8vh;
+}
+
+.login-options button {
+    display: block;
+    background: none;
+    border: none;
+    color: #333;
+    margin-bottom: 6px;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+}
+
+.login-options label {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.9vw;
+    gap: 0.8vh;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.login-options label input {
+    vertical-align: middle;
+    margin: 0;
+}
+
+.login-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .login-right img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+  }

@@ -1,0 +1,52 @@
+.main-container {
+    display: flex;
+    gap: 20px;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    box-sizing: border-box;
+  }
+  
+.welcome-message {
+    width: 30%;
+    height: 25vh; 
+    background-color: #f0f0f0;
+    padding: 20px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    overflow-y: auto;
+}
+  
+.right-section {
+    display: flex;
+    width: 70%;  
+    height: 50vh;
+    gap: 20px;
+}
+  
+.lab-manage, 
+.task-check {
+    flex: 1;
+    background-color: #d0e6f6;
+    padding: 20px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    overflow-y: auto;
+}
+
+.main-container h2 {
+    margin-bottom: 1rem;
+}
+
+.lab-manage ul,
+.task-check ul {
+    list-style: none;
+    padding: 0;
+}
+
+.lab-manage li,
+.task-check li {
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
