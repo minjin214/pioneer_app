@@ -2,12 +2,16 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
+import SignupPage from './pages/SignupPage';
+import FindAccountPage from './pages/FindAccountPage';
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/main" element={<MainPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/find" element={<FindAccountPage />} />
     </Routes>
   );
 }

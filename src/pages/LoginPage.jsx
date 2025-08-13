@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
 import introImage from '../assets/pioneer-intro.png';
@@ -9,7 +9,7 @@ function LoginPage() {
     const [password, setPassword] = useState('');
     const [keepLogin, setKeepLogin] = useState(false);
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
 
         if (!id || !password) {
@@ -17,8 +17,23 @@ function LoginPage() {
             return;
         }
         console.log('로그인 시도:', id, password, keepLogin);
+
+        const token = 'authToken';
+
+        if (keepLogin) {
+            localStorage.setItem('authToken', token); // 로그인 유지
+        } else {
+            sessionStorage.setItem('authToken', token); // 세션만 유지
+        }
         navigate('/main');
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (token) {
+          navigate('/main');
+        }
+    }, [navigate]);
 
     return (
         <div className="login-container">
@@ -39,10 +54,10 @@ function LoginPage() {
                     <button onClick={handleLogin}>로그인</button>
 
                     <div className="login-options">
-                        <button type="button" onClick={() => alert("회원가입 페이지로 이동 예정")}>
+                        <button type="button" onClick={() => navigate('/signup')}>
                             회원가입
                         </button>
-                        <button type="button" onClick={() => alert("아이디/비밀번호 찾기 페이지 이동 예정")}>
+                        <button type="button" onClick={() => navigate('/find')}>
                             아이디/비밀번호 찾기
                         </button>
                         <label>
