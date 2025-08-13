@@ -1,32 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+//import axios from 'axios';
 import './LoginPage.css';
 import introImage from '../assets/pioneer-intro.png';
 
 function LoginPage() {
     const navigate = useNavigate();
-    const [id, setId] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [keepLogin, setKeepLogin] = useState(false);
-
-    const handleLogin = async (e) => {
-        e.preventDefault();
-
-        if (!id || !password) {
-            alert('아이디와 비밀번호를 입력하시오.');
-            return;
-        }
-        console.log('로그인 시도:', id, password, keepLogin);
-
-        const token = 'authToken';
-
-        if (keepLogin) {
-            localStorage.setItem('authToken', token); // 로그인 유지
-        } else {
-            sessionStorage.setItem('authToken', token); // 세션만 유지
-        }
-        navigate('/main');
-    };
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
@@ -35,6 +18,43 @@ function LoginPage() {
         }
     }, [navigate]);
 
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        if (!username || !password) {
+            alert('아이디와 비밀번호를 입력하시오.');
+            return;
+        }
+        console.log('로그인 시도:', username, password, keepLogin);
+
+        try {
+            /*const res = await axios.post('https://reqres.in/api/users', {
+                username,
+                password
+            });*/
+
+            const token = 'authToken'; /*res.data.token;*/
+            if (keepLogin) {
+                localStorage.setItem('authToken', token); // 로그인 유지
+            } else {
+                sessionStorage.setItem('authToken', token); // 세션만 유지
+            }
+
+            alert('로그인 성공!');
+            navigate('/main');
+        } catch(err) {
+            console.error('로그인 요청 오류:', err);
+            if (err.response) {
+                alert(err.response.data.message || '로그인 실패');
+            } else {
+                alert('서버 연결 실패');
+            }
+        } finally {
+            setLoading(false);
+        }   
+    };
+
     return (
         <div className="login-container">
             <div className="login-box">
@@ -42,8 +62,8 @@ function LoginPage() {
                     <input
                         type="text"
                         placeholder="아이디"
-                        value={id}
-                        onChange={(e) => setId(e.target.value)}
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                     />
                     <input
                         type="password"

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+//import axios from 'axios';
 import './AuthPages.css';
 
 function SignupPage() {
@@ -10,6 +11,7 @@ function SignupPage() {
         username: '',
         password: ''
     });
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -17,9 +19,23 @@ function SignupPage() {
 
     const handleSignup = async (e) => {
         e.preventDefault();
-        console.log('회원가입 데이터:', form); //여기에 서버로 회원가입 데이터 전송 API 호출
-        alert('회원가입이 완료되었습니다.');
-        navigate('/');
+        setLoading(true);
+
+        try {
+            //const res = await axios.post('https://reqres.in/api/users', form); //서버만 바꾸기
+            console.log(form); //입력값 확인용
+            alert(/*res.data.message ||*/'회원가입 성공!');
+            navigate('/');
+        } catch(err) {
+            console.error('회원가입 요청 오류:', err);
+            if (err.response) {
+                alert(err.response.data.message || '회원가입 실패');
+            } else {
+                alert('서버 연결 실패');
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -30,7 +46,9 @@ function SignupPage() {
                 <input name="email" placeholder='이메일' onChange={handleChange} />
                 <input name="username" placeholder='아이디' onChange={handleChange} />
                 <input name="password" type="password" placeholder='비밀번호' onChange={handleChange} />
-                <button onClick={handleSignup}>회원가입</button>
+                <button onClick={handleSignup} disabled={loading}>
+                    {loading ? '처리 중...' : '회원가입'}
+                </button>
                 <p className='auth-link' onClick={() => navigate('/')}>로그인 페이지로</p>
             </div>
         </div>
