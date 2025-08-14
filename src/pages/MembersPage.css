@@ -1,0 +1,17 @@
+.members-list {
+    display: felx;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.member-card {
+    text-align: center;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    width: 150px;
+}
+
+.member-card img {
+    border-radius: 50%;
+}

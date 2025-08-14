@@ -23,20 +23,16 @@ function MainPage() {
             <div className='right-section'>
                 <div className='lab-manage'>
                     <h2>연구실 관리</h2>
-                    <ul>
-                        <li>📅 일정 공지</li>
-                        <li>👥 사용자 목록</li>
-                        <li>✅ 팀원 참석 여부</li>
-                    </ul>
+                    <button onClick={() => navigate('/schedule')}>📅 일정 공지</button>
+                    <button onClick={() => navigate('/members')}>👥 사용자 목록</button>
+                    <button onClick={() => navigate('/attendance')}>✅ 팀원 참석 여부</button>
                 </div>
                 
                 <div className='task-check'>
                     <h2>연구실 과제확인</h2>
-                        <ul>
-                            <li>💻 프로그래밍</li>
-                            <li>📚 스터디</li>
-                            <li>🛠 프로젝트</li>
-                        </ul>
+                    <button onClick={() => navigate('/programming')}>💻 프로그래밍</button>
+                    <button onClick={() => navigate('/study')}>📚 스터디</button>
+                    <button onClick={() => navigate('/project')}>🛠 프로젝트</button>
                 </div>
             </div>
         </div>
