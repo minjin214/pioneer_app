@@ -7,6 +7,7 @@ import FindAccountPage from './pages/FindAccountPage';
 import SchedulePage from './pages/SchedulePage';
 import MembersPage from './pages/MembersPage';
 import AttendancePage from './pages/AttendancePage';
+import AssignmentPage from './pages/AssignmentPage';
 
 function App() {
   return (
