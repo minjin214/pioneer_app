@@ -1,0 +1,56 @@
+/* 최소 스타일 - AssignPage.css */
+
+.assign-container { padding: 2rem; }
+.back-btn { margin-bottom: 8px; }
+
+.assign-layout { display: grid; grid-template-columns: 320px 1fr; gap: 16px; }
+
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  background: #fff;
+}
+
+.assn-ul { list-style: none; padding: 0; margin: 0; }
+.assn-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.assn-item.selected { border-color: #2563eb; outline: 2px solid #e0e7ff; }
+.assn-item .title { display: block; font-weight: 600; }
+.assn-item .due { font-size: .9rem; color: #6b7280; }
+
+.submit-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.submit-form input[type="text"],
+.submit-form input[type="date"],
+.submit-form input[type="url"] {
+  flex: 1 1 240px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.primary {
+  border: none; border-radius: 8px;
+  padding: 10px 14px;
+  background: #2563eb; color: #fff; cursor: pointer;
+}
+
+.muted { color: #6b7280; }
+.badge {
+  display: inline-block; padding: 2px 8px;
+  border: 1px solid #c7d2fe; border-radius: 999px; background: #eef2ff;
+  font-size: .85rem; margin-left: 6px;
+}
+
+.assn-table { width: 100%; border-collapse: collapse; }
+.assn-table th, .assn-table td { border-bottom: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+.assn-table .url a { word-break: break-all; }
+.score { width: 70px; }
