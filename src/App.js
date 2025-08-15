@@ -18,6 +18,7 @@ function App() {
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/members" element={<MembersPage />} />
       <Route path="/attendance" element={<AttendancePage />} />
+      <Route path="/assignments" element={<AssignmentPage />} />
     </Routes>
   );
 }
