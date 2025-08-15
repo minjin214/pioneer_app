@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './AssignPage.css';
+import './AssignmentPage.css';
 
 const STORAGE_KEY = 'labAssignments_v1';
 const defaultUser = { id: 'u-0001', name: '홍길동' };
@@ -10,8 +10,9 @@ function AssignPage({ isAdmin = false, currentUser = defaultUser }) {
 
   // 초기 과제 더미
   const initial = [
-    { id: 'a-1', title: '알고리즘 과제 #1', dueDate: '2025-08-25', submissions: [] },
-    { id: 'a-2', title: '논문 리뷰 1주차',   dueDate: '2025-08-28', submissions: [] },
+    { id: 'a-1', title: '프로그래밍 과제 #1', dueDate: '2025-08-27', submissions: [] },
+    { id: 'a-2', title: '스터디 과제 #1',   dueDate: '2025-08-27', submissions: [] },
+    { id: 'a-3', title: '프로젝트 과제 #1',   dueDate: '2025-08-27', submissions: [] }
   ];
 
   // 로컬스토리지 연동
@@ -215,4 +216,5 @@ function AssignPage({ isAdmin = false, currentUser = defaultUser }) {
   );
 }
 
-export default AssignPage;
+export default AssignmentPage;
+
