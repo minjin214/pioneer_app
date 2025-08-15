@@ -311,3 +311,5 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
     </div>
   );
 }
+
+export default AssignmentPage;
