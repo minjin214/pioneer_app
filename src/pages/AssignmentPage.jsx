@@ -25,6 +25,7 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
   }[category];
 
   const STORAGE_KEY = `assign_${category}_v1`;
+  const SELECTED_KEY = `${STORAGE_KEY}__selected`;
 
   // 초기 더미 과제
   const seed = {
@@ -48,6 +49,26 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
       return seed;
     }
   });
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const next = raw ? JSON.parse(raw) : seed;
+      setList(next);
+
+      const savedSel = localStorage.getItem(SELECTED_KEY);
+      if (savedSel && next.some(a => a.id === savedSel)) {
+        setSelectedId(savedSel);
+      } else {
+        setSelectedId(next[0]?.id ?? null);
+      }
+    } catch {
+      setList(seed);
+      setSelectedId(seed[0]?.id ?? null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category]); // category만 감시 (STORAGE_KEY/seed는 category로부터 파생)
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   }, [list, STORAGE_KEY]);
@@ -57,6 +78,16 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
   const [newTitle, setNewTitle] = useState("");
   const [newDue, setNewDue] = useState("");
   const [submitUrl, setSubmitUrl] = useState("");
+
+  useEffect(() => {
+    if (selectedId && !list.find(a => a.id === selectedId)) {
+      setSelectedId(list[0]?.id ?? null);
+    }
+  }, [list, selectedId]);
+
+  useEffect(() => {
+    if (selectedId) localStorage.setItem(SELECTED_KEY, selectedId);
+  }, [selectedId, SELECTED_KEY]);
 
   const selected = useMemo(
     () => list.find((a) => a.id === selectedId) || null,
