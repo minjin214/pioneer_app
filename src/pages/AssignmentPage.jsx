@@ -5,7 +5,7 @@ import './AssignmentPage.css';
 const STORAGE_KEY = 'labAssignments_v1';
 const defaultUser = { id: 'u-0001', name: '홍길동' };
 
-function AssignPage({ isAdmin = false, currentUser = defaultUser }) {
+function AssignmentPage({ isAdmin = false, currentUser = defaultUser }) {
   const navigate = useNavigate();
 
   // 초기 과제 더미
@@ -217,4 +217,5 @@ function AssignPage({ isAdmin = false, currentUser = defaultUser }) {
 }
 
 export default AssignmentPage;
+
 
