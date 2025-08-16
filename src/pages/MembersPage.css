@@ -1,17 +1,121 @@
+.members-container {
+    padding: 2rem;
+}
+
+.back-btn {
+    margin-bottom: 10px;
+    padding: 5px 10px;
+}
+
+.page-title {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.action-buttons {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.action-buttons button {
+    padding: 5px 10px;
+    margin: 0 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    background-color: #4caf50;
+    color: white;
+}
+
+.action-buttons button:hover {
+    background-color: #45a049;
+}
+
 .members-list {
-    display: felx;
-    gap: 20px;
+    display: flex;
     flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start; /* 덜 찬 줄 왼쪽 정렬 */
 }
 
 .member-card {
-    text-align: center;
-    border: 1px solid #ddd;
+    flex: 1 0 30%;
+    max-width: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 10px;
+    border: 1px solid #ddd;
     border-radius: 8px;
-    width: 150px;
+    background-color: #f9f9f9;
+    cursor: pointer; /* 클릭 삭제 */
+}
+
+.member-card.selected-member {
+    border: 2px solid #f44336; /* 선택된 멤버 강조 */
+    background-color: #ffe0e0;
 }
 
 .member-card img {
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 900px) {
+    .member-card {
+        flex: 1 0 45%;
+    }
+}
+
+@media (max-width: 500px) {
+    .member-card {
+        flex: 1 0 90%;
+    }
+}
+
+/* 팝업 스타일 */
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 999;
+    width: 300px;
+}
+
+.popup input {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+.popup-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.popup button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.popup button:first-child {
+    background-color: #4caf50;
+    color: white;
+}
+
+.popup button:last-child {
+    background-color: #f44336;
+    color: white;
 }
