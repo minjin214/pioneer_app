@@ -28,6 +28,7 @@ function FindAccountPage() {
                 />
                 <button onClick={handleFindId}>아이디 찾기</button>
                 <button onClick={handleResetPassword}>비밀번호 재설정</button>
+                <p className='auth-link' onClick={() => navigate('/')}>로그인 페이지로</p>
             </div>
         </div>
     );
