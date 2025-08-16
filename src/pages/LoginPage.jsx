@@ -15,7 +15,7 @@ function LoginPage() {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await API.post("/auth/login", { username, password });
+            const res = await API.post("/api/auth/login", { username, password });
             localStorage.setItem("token", res.data.token);
             alert("로그인 성공!");
             navigate("/main");
