@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./AssignmentPage.css";
+import API from "../api";
 
-
-export function AssignmentPage({ isAdmin = true, currentUser }) {
+function AssignmentPage({ isAdmin = true, currentUser }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  // 현재 로그인 사용자 (없으면 예시)
+  // 로그인 사용자 (없으면 예시)
   const user = currentUser ?? { id: "u-0001", name: "홍길동" };
 
   // URL -> 카테고리
@@ -24,142 +24,77 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
     project: "프로젝트 과제",
   }[category];
 
-  const STORAGE_KEY = `assign_${category}_v1`;
-  const SELECTED_KEY = `${STORAGE_KEY}__selected`;
+  const [list, setList] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
 
-  // 초기 더미 과제
-  const seed = {
-    programming: [
-      { id: "p-1", title: "프로그래밍 #1", dueDate: "2025-08-27", submissions: [] },
-    ],
-    study: [
-      { id: "s-1", title: "스터디 #1", dueDate: "2025-08-27", submissions: [] },
-    ],
-    project: [
-      { id: "pr-1", title: "프로젝트 #1", dueDate: "2025-08-27", submissions: [] },
-    ],
-  }[category];
-
-  // 목록 로드/저장
-  const [list, setList] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : seed;
-    } catch {
-      return seed;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const next = raw ? JSON.parse(raw) : seed;
-      setList(next);
-
-      const savedSel = localStorage.getItem(SELECTED_KEY);
-      if (savedSel && next.some(a => a.id === savedSel)) {
-        setSelectedId(savedSel);
-      } else {
-        setSelectedId(next[0]?.id ?? null);
-      }
-    } catch {
-      setList(seed);
-      setSelectedId(seed[0]?.id ?? null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]); // category만 감시 (STORAGE_KEY/seed는 category로부터 파생)
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  }, [list, STORAGE_KEY]);
-
-  // 선택/입력 상태
-  const [selectedId, setSelectedId] = useState(list[0]?.id ?? null);
+  // 입력 상태
   const [newTitle, setNewTitle] = useState("");
   const [newDue, setNewDue] = useState("");
   const [submitUrl, setSubmitUrl] = useState("");
 
-  useEffect(() => {
-    if (selectedId && !list.find(a => a.id === selectedId)) {
-      setSelectedId(list[0]?.id ?? null);
-    }
-  }, [list, selectedId]);
-
-  useEffect(() => {
-    if (selectedId) localStorage.setItem(SELECTED_KEY, selectedId);
-  }, [selectedId, SELECTED_KEY]);
-
-  const selected = useMemo(
-    () => list.find((a) => a.id === selectedId) || null,
-    [list, selectedId]
-  );
-
-  // URL 유효성
-  const isValidUrl = (u) => {
+  // 과제 불러오기
+  const fetchAssignments = async () => {
     try {
-      const x = new URL(u);
-      return ["http:", "https:"].includes(x.protocol);
-    } catch {
-      return false;
+      const res = await API.get(`/assignments?category=${category}`);
+      setList(res.data);
+      if (res.data.length > 0) {
+        setSelectedId(res.data[0].id);
+      }
+    } catch (err) {
+      console.error("과제 불러오기 실패", err);
     }
   };
 
-  // 과제 추가(관리자)
-  const addAssignment = (e) => {
+  useEffect(() => {
+    fetchAssignments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category]);
+
+  const selected = list.find((a) => a.id === selectedId) || null;
+
+  // 과제 추가
+  const addAssignment = async (e) => {
     e.preventDefault();
     if (!newTitle || !newDue) return;
-    setList((prev) => [
-      { id: `${Date.now()}`, title: newTitle.trim(), dueDate: newDue, submissions: [] },
-      ...prev,
-    ]);
-    setNewTitle("");
-    setNewDue("");
+    try {
+      await API.post("/assignments", {
+        title: newTitle,
+        dueDate: newDue,
+        category,
+      });
+      setNewTitle("");
+      setNewDue("");
+      fetchAssignments();
+    } catch (err) {
+      console.error("과제 추가 실패", err);
+    }
   };
 
-  // 제출(사용자) — 재제출 시 내 제출 덮어쓰기
-  const submitLink = (e) => {
+  // 과제 제출
+  const submitLink = async (e) => {
     e.preventDefault();
     if (!selected) return;
-    if (!isValidUrl(submitUrl)) {
-      alert("http/https 링크를 입력하세요.");
-      return;
+    try {
+      await API.post(`/assignments/${selected.id}/submissions`, {
+        userId: user.id,
+        userName: user.name,
+        url: submitUrl,
+      });
+      setSubmitUrl("");
+      fetchAssignments();
+    } catch (err) {
+      console.error("제출 실패", err);
     }
-    setList((prev) =>
-      prev.map((a) => {
-        if (a.id !== selected.id) return a;
-        const next = [...a.submissions];
-        const idx = next.findIndex((s) => s.userId === user.id);
-        const payload = {
-          userId: user.id,
-          userName: user.name,
-          url: submitUrl.trim(),
-          submittedAt: new Date().toISOString(),
-          status: "제출됨", // 기본 상태
-          score: null,
-          note: "",
-        };
-        if (idx >= 0) next[idx] = payload;
-        else next.unshift(payload);
-        return { ...a, submissions: next };
-      })
-    );
-    setSubmitUrl("");
   };
 
-  // 관리자: 상태/점수/메모 수정
-  const updateSubmission = (userId, patch) => {
-    setList((prev) =>
-      prev.map((a) =>
-        a.id !== selected?.id
-          ? a
-          : {
-              ...a,
-              submissions: a.submissions.map((s) =>
-                s.userId === userId ? { ...s, ...patch } : s
-              ),
-            }
-      )
-    );
+  // 관리자: 제출 상태/점수 수정
+  const updateSubmission = async (userId, patch) => {
+    try {
+      await API.patch(`/assignments/${selected.id}/submissions/${userId}`, patch);
+      fetchAssignments();
+    } catch (err) {
+      console.error("제출 수정 실패", err);
+    }
   };
 
   return (
@@ -170,7 +105,7 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
       <h2>📋 {TITLE}</h2>
 
       <div className="assign-grid">
-        {/* 왼쪽: 과제 목록 + 추가 */}
+        {/* 왼쪽: 과제 목록 */}
         <aside className="panel">
           <h3>과제 목록</h3>
           <ul className="assn-list">
@@ -211,7 +146,7 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
           )}
         </aside>
 
-        {/* 오른쪽: 상세/제출/현황 */}
+        {/* 오른쪽: 상세 & 제출 */}
         <main className="panel">
           {!selected ? (
             <p className="muted">왼쪽에서 과제를 선택하세요.</p>
@@ -232,34 +167,10 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
                 <button className="primary">제출</button>
               </form>
 
-              {/* 내 제출 요약 */}
-              {selected.submissions.some((s) => s.userId === user.id) && (
-                <div className="mine-box">
-                  {selected.submissions
-                    .filter((s) => s.userId === user.id)
-                    .slice(0, 1)
-                    .map((s) => (
-                      <div key={s.userId} className="mine">
-                        <a href={s.url} target="_blank" rel="noreferrer">
-                          {s.url}
-                        </a>
-                        <span className="badge">{s.status}</span>
-                        <span className="muted">
-                          {new Date(s.submittedAt).toLocaleString()}
-                        </span>
-                        <div className="muted">
-                          채점: {s.score != null ? `${s.score}점` : "없음"}{" "}
-                          {s.note && `(${s.note})`}
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-
               {isAdmin && (
                 <>
                   <h4 className="mt12">제출 현황 / 채점</h4>
-                  {selected.submissions.length === 0 ? (
+                  {selected.submissions?.length === 0 ? (
                     <p className="muted">제출이 없습니다.</p>
                   ) : (
                     <table className="assn-table">
@@ -287,9 +198,7 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
                               <select
                                 value={s.status}
                                 onChange={(e) =>
-                                  updateSubmission(s.userId, {
-                                    status: e.target.value,
-                                  })
+                                  updateSubmission(s.userId, { status: e.target.value })
                                 }
                               >
                                 <option>제출됨</option>
@@ -303,7 +212,6 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
                                 type="number"
                                 min="0"
                                 max="100"
-                                placeholder="-"
                                 value={s.score ?? ""}
                                 onChange={(e) =>
                                   updateSubmission(s.userId, {
@@ -344,3 +252,24 @@ export function AssignmentPage({ isAdmin = true, currentUser }) {
 }
 
 export default AssignmentPage;
+
+/* 백엔드 응답 구조
+[
+  {
+    "id": "a-1",
+    "title": "프로그래밍 #1",
+    "dueDate": "2025-08-27",
+    "submissions": [
+      {
+        "userId": "u-0001",
+        "userName": "홍길동",
+        "url": "https://github.com/test",
+        "submittedAt": "2025-08-16T12:00:00Z",
+        "status": "제출됨",
+        "score": null,
+        "note": ""
+      }
+    ]
+  }
+]
+*/

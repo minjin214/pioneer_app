@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './SchedulePage.css';
+import API from "../api";
 
 function SchedulePage() {
   const navigate = useNavigate();
@@ -11,66 +12,23 @@ function SchedulePage() {
   const [inputValue, setInputValue] = useState('');
   const [deletingIndex, setDeletingIndex] = useState(null);
 
-  useEffect(() => {
-    //서버에서 온 기본 일정 (임시 하드코딩)
-    const serverData = { 
-      '2025-08-20': ['회식']
-    };
-  
-    //로컬스토리지에 저장된 일정 불러오기
-    const savedEvents = localStorage.getItem('labSchedule');
-    let finalEvents = { ...serverData }; // 서버 데이터로 시작
-  
-    if (savedEvents) {
-      const parsed = JSON.parse(savedEvents);
-  
-      //배열 아닌 값은 배열로 변환
-      for (const key in parsed) {
-        if (Array.isArray(parsed[key])) {
-          finalEvents[key] = parsed[key];
-        } else if (typeof parsed[key] === 'string') {
-          finalEvents[key] = [parsed[key]];
-        }
-      }
+  const fetchEvents = async () => {
+    try {
+      const res = await API.get("/schedules");
+      // 서버 응답이 [{date:"2025-08-20", events:["MT"]}, ...] 라고 가정
+      const obj = {};
+      res.data.forEach(item => {
+        obj[item.date] = item.events;
+      });
+      setEvents(obj);
+    } catch (err) {
+      console.error("일정 불러오기 실패", err);
     }
-  
-    setEvents(finalEvents);
-    localStorage.setItem('labSchedule', JSON.stringify(finalEvents));
-  }, []);
+  };
 
-  /* API 용?
   useEffect(() => {
-    const fetchServerData = async () => {
-      try {
-        // 📡 API 요청 (예시)
-        const res = await axios.get('/api/schedule');
-        const serverData = res.data; // { '2025-08-20': ['MT'], ... }
-
-        // 로컬 데이터랑 병합
-        const savedEvents = localStorage.getItem('labSchedule');
-        let finalEvents = { ...serverData };
-
-        if (savedEvents) {
-          const parsed = JSON.parse(savedEvents);
-          for (const key in parsed) {
-            if (Array.isArray(parsed[key])) {
-              finalEvents[key] = parsed[key];
-            } else if (typeof parsed[key] === 'string') {
-              finalEvents[key] = [parsed[key]];
-            }
-          }
-        }
-
-        setEvents(finalEvents);
-        localStorage.setItem('labSchedule', JSON.stringify(finalEvents));
-      } catch (err) {
-        console.error('서버 일정 불러오기 실패:', err);
-      }
-    };
-
-    fetchServerData();
+    fetchEvents();
   }, []);
-  */
 
   // 날짜를 문자열(YYYY-MM-DD)로 변환하는 함수
   const formatDate = (date) => {
@@ -92,32 +50,25 @@ function SchedulePage() {
     setInputValue('');
   };
 
-  const saveEvent = () => {
-    if (!selectedDate || !inputValue.trim()) return;
-    const newEvents = {
-      ...events,
-      [selectedDate]: [
-        ...(Array.isArray(events[selectedDate]) ? events[selectedDate] : []),
-        inputValue
-      ]
-    };
-    setEvents(newEvents);
-    localStorage.setItem('labSchedule', JSON.stringify(newEvents));
-    setInputValue('');
+  const saveEvent = async () => {
+    if (!selectedDate || !inputValue) return;
+    try {
+      await API.post("/schedules", { date: selectedDate, event: inputValue });
+      fetchEvents();
+      setInputValue("");
+    } catch (err) {
+      console.error("일정 저장 실패", err);
+    }
   };
 
-  const deleteEvent = (dateStr, index) => {
-    const dayEvents = Array.isArray(events[dateStr]) ? [...events[dateStr]] : [];
-    dayEvents.splice(index, 1); // 선택된 일정 삭제
-  
-    const newEvents = { ...events, [dateStr]: dayEvents };
-    if (dayEvents.length === 0) {
-      delete newEvents[dateStr]; // 일정이 비면 해당 날짜 제거
+  // 일정 삭제
+  const deleteEvent = async (eventText) => {
+    try {
+      await API.delete(`/schedules/${selectedDate}`, { data: { event: eventText } });
+      fetchEvents();
+    } catch (err) {
+      console.error("일정 삭제 실패", err);
     }
-  
-    setEvents(newEvents);
-    localStorage.setItem('labSchedule', JSON.stringify(newEvents));
-    setDeletingIndex(null);
   };
 
   return (
@@ -163,7 +114,9 @@ function SchedulePage() {
 
             {/* 삭제 버튼 (선택된 일정이 있을 때만) */}
             {deletingIndex !== null && (
-              <button className="delete-btn" onClick={() => deleteEvent(selectedDate, deletingIndex)}>
+              <button 
+                className="delete-btn" 
+                onClick={() => deleteEvent(events[selectedDate][deletingIndex])}>
                 삭제하기
               </button>
             )}
@@ -178,3 +131,30 @@ function SchedulePage() {
 }
 
 export default SchedulePage;
+
+/* 응답구조
+[
+  {
+    "date": "2025-08-20",
+    "events": ["회식", "MT"]
+  },
+  {
+    "date": "2025-08-21",
+    "events": ["스터디"]
+  }
+]
+
+{
+  "success": true,
+  "message": "일정 추가 완료",
+  "event": "회식",
+  "date": "2025-08-20"
+}
+
+{
+  "success": true,
+  "message": "일정 삭제 완료",
+  "event": "회식",
+  "date": "2025-08-20"
+}
+*/

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 //import axios from 'axios';
 import './AuthPages.css';
+import API from "../api"
 
 function SignupPage() {
     const navigate = useNavigate();
@@ -20,23 +21,16 @@ function SignupPage() {
     const handleSignup = async (e) => {
         e.preventDefault();
         setLoading(true);
-
         try {
-            //const res = await axios.post('https://reqres.in/api/users', form); //서버만 바꾸기
-            console.log(form); //입력값 확인용
-            alert(/*res.data.message ||*/'회원가입 성공!');
-            navigate('/');
-        } catch(err) {
-            console.error('회원가입 요청 오류:', err);
-            if (err.response) {
-                alert(err.response.data.message || '회원가입 실패');
-            } else {
-                alert('서버 연결 실패');
+            await API.post("/signup", form);
+            alert("회원가입 성공!");
+            navigate("/");
+            } catch (err) {
+            alert(err.response?.data?.message || "회원가입 실패");
+            } finally {
+                setLoading(false);
             }
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
 
     return (
         <div className='auth-container'>
@@ -56,3 +50,16 @@ function SignupPage() {
 }
 
 export default SignupPage;
+
+/* 응답구조
+{
+  "success": true,
+  "message": "회원가입 성공",
+  "user": {
+    "id": 123,
+    "name": "홍길동",
+    "email": "test@test.com",
+    "username": "hong123"
+  }
+}
+*/

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 //import axios from 'axios';
 import './LoginPage.css';
 import introImage from '../assets/pioneer-intro.png';
+import API from "../api";
 
 function LoginPage() {
     const navigate = useNavigate();
@@ -11,48 +12,20 @@ function LoginPage() {
     const [keepLogin, setKeepLogin] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        if (token) {
-          navigate('/main');
-        }
-    }, [navigate]);
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setLoading(true);
-
-        if (!username || !password) {
-            alert('아이디와 비밀번호를 입력하시오.');
-            return;
-        }
-        console.log('로그인 시도:', username, password, keepLogin);
-
         try {
-            /*const res = await axios.post('https://reqres.in/api/users', {
-                username,
-                password
-            });*/
-
-            const token = 'authToken'; /*res.data.token;*/
-            if (keepLogin) {
-                localStorage.setItem('authToken', token); // 로그인 유지
-            } else {
-                sessionStorage.setItem('authToken', token); // 세션만 유지
-            }
-
-            alert('로그인 성공!');
-            navigate('/main');
-        } catch(err) {
-            console.error('로그인 요청 오류:', err);
-            if (err.response) {
-                alert(err.response.data.message || '로그인 실패');
-            } else {
-                alert('서버 연결 실패');
-            }
-        } finally {
-            setLoading(false);
-        }   
+            const res = await API.post("/login", { username, password });
+            localStorage.setItem("token", res.data.token);
+            alert("로그인 성공!");
+            navigate("/main");
+        } catch (err) {
+            alert(err.response?.data?.message || "로그인 실패");
+        }
     };
 
     return (
@@ -102,3 +75,20 @@ function LoginPage() {
 }
 
 export default LoginPage;
+
+/* 응답구조
+{
+  "success": true,
+  "token": "abcdefg123456",  // 로그인 세션 토큰
+  "user": {
+    "id": 123,
+    "name": "홍길동",
+    "username": "hong123"
+  }
+}
+
+{
+  "success": false,
+  "message": "아이디 또는 비밀번호가 잘못되었습니다."
+}
+*/
