@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-//import axios from 'axios';
 import './LoginPage.css';
 import introImage from '../assets/pioneer-intro.png';
 import API from "../api";
@@ -12,12 +11,9 @@ function LoginPage() {
     const [keepLogin, setKeepLogin] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
     const handleLogin = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const res = await API.post("/login", { username, password });
             localStorage.setItem("token", res.data.token);
@@ -25,6 +21,8 @@ function LoginPage() {
             navigate("/main");
         } catch (err) {
             alert(err.response?.data?.message || "로그인 실패");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -32,39 +30,41 @@ function LoginPage() {
         <div className="login-container">
             <div className="login-box">
                 <h2>로그인</h2>
-                    <input
-                        type="text"
-                        placeholder="아이디"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                    <input
-                        type="password"
-                        placeholder="비밀번호"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <button onClick={handleLogin}>로그인</button>
+                <input
+                    type="text"
+                    placeholder="아이디"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="비밀번호"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+                <button onClick={handleLogin} disabled={loading}>
+                    {loading ? "처리 중..." : "로그인"}
+                </button>
 
-                    <div className="login-options">
-                        <button type="button" onClick={() => navigate('/signup')}>
-                            회원가입
-                        </button>
-                        <button type="button" onClick={() => navigate('/find')}>
-                            아이디/비밀번호 찾기
-                        </button>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={keepLogin}
-                                onChange={(e) => setKeepLogin(e.target.checked)}
-                            />
-                            로그인 유지
-                        </label>
-                        <button type="button" onClick={() => alert("관리자 로그인 인증 페이지 예정")}>
-                            관리자 로그인
-                        </button>
-                    </div>
+                <div className="login-options">
+                    <button type="button" onClick={() => navigate('/signup')}>
+                        회원가입
+                    </button>
+                    <button type="button" onClick={() => navigate('/find')}>
+                        아이디/비밀번호 찾기
+                    </button>
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={keepLogin}
+                            onChange={(e) => setKeepLogin(e.target.checked)}
+                        />
+                        로그인 유지
+                    </label>
+                    <button type="button" onClick={() => alert("관리자 로그인 인증 페이지 예정")}>
+                        관리자 로그인
+                    </button>
+                </div>
             </div>
 
             <div className="login-right">
