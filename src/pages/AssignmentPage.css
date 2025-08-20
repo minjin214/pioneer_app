@@ -29,6 +29,19 @@
 .assn-item .title { display: block; font-weight: 600; }
 .assn-item .due { font-size: .9rem; color: #6b7280; }
 
+.danger {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ef4444;
+  color: #fff;
+  cursor: pointer;
+}
+.danger:hover { background: #dc2626; }
+.danger:disabled { opacity: .6; cursor: not-allowed; }
+
+.small { font-size: .875rem; padding: 10px 12px; }
+
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .row input[type="text"],
 .row input[type="date"],
