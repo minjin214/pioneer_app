@@ -1,146 +1,181 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
-import './AttendancePage.css';
-import API from "../api";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import Calendar from "react-calendar";   // ✅ 달력 라이브러리
+import "react-calendar/dist/Calendar.css";
+import "./AttendancePage.css";
 
 function AttendancePage() {
-  const navigate = useNavigate();
-  const [absentList, setAbsentList] = useState({});
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [inputValue, setInputValue] = useState('');
-  const [deletingIndex, setDeletingIndex] = useState(null);
+  const [attendances, setAttendances] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filterUserId, setFilterUserId] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [editReason, setEditReason] = useState({});
+  const [calendarDate, setCalendarDate] = useState(new Date());
 
-  const fetchAttendance = async () => {
+  const fetchAll = async () => {
+    setLoading(true);
     try {
-      const res = await API.get("/attendance");
-      const obj = {};
-      res.data.forEach(item => {
-        obj[item.date] = item.absent;
-      });
-      setAbsentList(obj);
+      const res = await axios.get("/api/attendances");
+      setAttendances(res.data.data);
     } catch (err) {
-      console.error("출석 불러오기 실패", err);
+      console.error(err);
     }
+    setLoading(false);
+  };
+
+  const fetchByUser = async () => {
+    if (!filterUserId) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(`/api/attendances/user/${filterUserId}`);
+      setAttendances(res.data.data);
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  const fetchByDate = async (date) => {
+    if (!date) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(`/api/attendances/date/${date}`);
+      setAttendances(res.data.data);
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  const updateStatus = async (id, status) => {
+    try {
+      await axios.patch(`/api/attendances/${id}`, { status });
+      fetchAll();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const saveReason = async (id) => {
+    try {
+      await axios.post(`/api/attendances/${id}/reason`, {
+        reason: editReason[id],
+      });
+      setEditReason((prev) => ({ ...prev, [id]: "" }));
+      fetchAll();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ✅ 달력 날짜 선택 시 실행
+  const onCalendarChange = (value) => {
+    setCalendarDate(value);
+    const isoDate = value.toISOString().split("T")[0]; // yyyy-MM-dd 변환
+    setFilterDate(isoDate);
+    fetchByDate(isoDate);
   };
 
   useEffect(() => {
-    fetchAttendance();
+    fetchAll();
   }, []);
-
-  const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  const handleDateClick = (date) => {
-    const dateStr = formatDate(date);
-    setSelectedDate(dateStr);
-    setInputValue('');
-  };
-
-  const saveAbsent = async () => {
-    try {
-      await API.post("/attendance", { date: selectedDate, absent: inputValue });
-      fetchAttendance();
-      setInputValue("");
-    } catch (err) {
-      console.error("출석 저장 실패", err);
-    }
-  };
-
-  const deleteAbsent = (dateStr, index) => {
-    const dayList = Array.isArray(absentList[dateStr]) ? [...absentList[dateStr]] : [];
-    dayList.splice(index, 1);
-    const newList = { ...absentList, [dateStr]: dayList };
-    if (dayList.length === 0) delete newList[dateStr];
-    setAbsentList(newList);
-    localStorage.setItem('labAttendance', JSON.stringify(newList));
-    setDeletingIndex(null);
-  };
 
   return (
     <div className="attendance-container">
-      <button className="back-btn" onClick={() => navigate('/main')}>← 메인으로</button>
-      <h2 className="page-title">✅ 팀원 참석 여부</h2>
+      <h1 className="attendance-title">출석 관리</h1>
 
-      <div className="content-layout">
-        {/* 좌측 달력 */}
-        <div className="calendar-section">
-          <Calendar onClickDay={handleDateClick} />
-        </div>
-
-        {/* 우측 참석 관리 */}
-        <div className="events-section">
-          {selectedDate ? (
-            <>
-              <h3>{selectedDate} 미참석</h3>
-
-              <div className="input-area">
-                <input
-                  type="text"
-                  placeholder="미참석 인원 입력"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                />
-                <button onClick={saveAbsent}>추가</button>
-              </div>
-
-              <ul className="event-list">
-                {(Array.isArray(absentList[selectedDate]) ? absentList[selectedDate] : []).map((ev, idx) => (
-                  <li
-                    key={idx}
-                    onClick={() => setDeletingIndex(idx)}
-                    className={deletingIndex === idx ? "selected-event" : ""}
-                  >
-                    {ev}
-                  </li>
-                ))}
-              </ul>
-
-              {deletingIndex !== null && (
-                <button className="delete-btn" onClick={() => deleteAbsent(selectedDate, deletingIndex)}>
-                  삭제
-                </button>
-              )}
-            </>
-          ) : (
-            <p className="placeholder-text">날짜를 선택하면 미참석자 입력이 가능합니다.</p>
-          )}
-        </div>
+      {/* 달력 */}
+      <div className="calendar-box">
+        <Calendar onChange={onCalendarChange} value={calendarDate} />
       </div>
+
+      {/* 검색 필터 */}
+      <div className="attendance-filters">
+        <input
+          type="text"
+          placeholder="유저 ID 검색"
+          value={filterUserId}
+          onChange={(e) => setFilterUserId(e.target.value)}
+        />
+        <button onClick={fetchByUser}>유저 검색</button>
+
+        <input
+          type="date"
+          value={filterDate}
+          onChange={(e) => setFilterDate(e.target.value)}
+        />
+        <button onClick={() => fetchByDate(filterDate)}>날짜 검색</button>
+
+        <button onClick={fetchAll}>전체 조회</button>
+      </div>
+
+      {/* 테이블 */}
+      {loading ? (
+        <p>불러오는 중...</p>
+      ) : (
+        <table className="attendance-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>이름</th>
+              <th>날짜</th>
+              <th>상태</th>
+              <th>불참 사유</th>
+              <th>수정</th>
+            </tr>
+          </thead>
+          <tbody>
+            {attendances.map((a) => (
+              <tr key={a.attendanceId}>
+                <td>{a.userId}</td>
+                <td>{a.userName}</td>
+                <td>{a.date}</td>
+                <td>
+                  <select
+                    value={a.status}
+                    onChange={(e) =>
+                      updateStatus(
+                        a.attendanceId,
+                        e.target.value === "참석"
+                          ? "ATTEND"
+                          : e.target.value === "불참"
+                          ? "ABSENT"
+                          : "UNKNOWN"
+                      )
+                    }
+                  >
+                    <option>참석</option>
+                    <option>불참</option>
+                    <option>미정</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value={editReason[a.attendanceId] ?? a.reason ?? ""}
+                    onChange={(e) =>
+                      setEditReason((prev) => ({
+                        ...prev,
+                        [a.attendanceId]: e.target.value,
+                      }))
+                    }
+                  />
+                </td>
+                <td>
+                  <button
+                    className="save-btn"
+                    onClick={() => saveReason(a.attendanceId)}
+                  >
+                    저장
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
 
 export default AttendancePage;
-
-/* 응답구조
-[
-  {
-    "date": "2025-08-20",
-    "absent": ["홍길동", "김철수"]
-  },
-  {
-    "date": "2025-08-21",
-    "absent": ["이영희"]
-  }
-]
-
-{
-  "success": true,
-  "message": "미참석자 등록 완료",
-  "date": "2025-08-20",
-  "absent": "홍길동"
-}
-
-{
-  "success": true,
-  "message": "미참석자 삭제 완료",
-  "date": "2025-08-20",
-  "absent": "홍길동"
-}
-*/
