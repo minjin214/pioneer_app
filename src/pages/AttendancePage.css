@@ -1,4 +1,8 @@
 /* 페이지 전체 */
+.back-btn {
+  margin-bottom: 10px;
+  padding: 5px 10px;
+}
 .attendance-container {
   max-width: 1000px;
   margin: 0 auto;

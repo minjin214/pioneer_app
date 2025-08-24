@@ -3,8 +3,10 @@ import axios from "axios";
 import Calendar from "react-calendar";   // ✅ 달력 라이브러리
 import "react-calendar/dist/Calendar.css";
 import "./AttendancePage.css";
+import { useNavigate } from 'react-router-dom';
 
 function AttendancePage() {
+  const navigate = useNavigate();
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterUserId, setFilterUserId] = useState("");
@@ -82,6 +84,8 @@ function AttendancePage() {
 
   return (
     <div className="attendance-container">
+      <button className="back-btn" onClick={() => navigate('/main')}>⬅ 메인으로</button>
+
       <h1 className="attendance-title">출석 관리</h1>
 
       {/* 달력 */}

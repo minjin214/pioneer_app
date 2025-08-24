@@ -96,7 +96,7 @@ function MembersPage() {
 
     return (
         <div className="members-container">
-            <button className="back-btn" onClick={() => navigate('/main')}>← 메인으로</button>
+            <button className="back-btn" onClick={() => navigate('/main')}>⬅ 메인으로</button>
 
             <h2 className="page-title">👥 사용자 목록</h2>
 
