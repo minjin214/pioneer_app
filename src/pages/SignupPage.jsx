@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-//import axios from 'axios';
 import './AuthPages.css';
 import API from "../api"
 
@@ -10,12 +9,30 @@ function SignupPage() {
         name: '',
         email: '',
         username: '',
-        password: ''
+        password: '',
+        grade: '',       // 학년
+        position: '',     // 학위 과정
+        role: 'USER'
     });
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    // position 값 변환 (한글 → 영어)
+    const handlePositionChange = (e) => {
+        const mapping = {
+            "학부": "UNDERGRADUATE",
+            "석박사": "MASTER",
+            "기타": "OTHER"
+        };
+        setForm({ ...form, position: mapping[e.target.value] });
+    };
+
+    // ✅ 체크박스 핸들러
+    const handleRoleCheckbox = (e) => {
+        setForm({ ...form, role: e.target.checked ? 'ADMIN' : 'USER' });
     };
 
     const handleSignup = async (e) => {
@@ -25,21 +42,50 @@ function SignupPage() {
             await API.post("/signup", form);
             alert("회원가입 성공!");
             navigate("/");
-            } catch (err) {
+        } catch (err) {
             alert(err.response?.data?.message || "회원가입 실패");
-            } finally {
-                setLoading(false);
-            }
-        };
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className='auth-container'>
             <div className='auth-box'>
-                <h2>회원갸입</h2>
+                <h2>회원가입</h2>
                 <input name="name" placeholder='이름' onChange={handleChange} />
                 <input name="email" placeholder='이메일' onChange={handleChange} />
                 <input name="username" placeholder='아이디' onChange={handleChange} />
                 <input name="password" type="password" placeholder='비밀번호' onChange={handleChange} />
+
+                {/* grade 선택 */}
+                <input
+                    name="grade" 
+                    type="number" 
+                    min="1" 
+                    max="4" 
+                    placeholder="학년 (1~4)" 
+                    onChange={handleChange} 
+                />
+                {/* position 선택 */}
+                <select name="position" onChange={handlePositionChange}>
+                    <option value="">구분 선택</option>
+                    <option value="학부">학부</option>
+                    <option value="석박사">석박사</option>
+                    <option value="기타">기타</option>
+                </select>
+
+                {/* ✅ 관리자 체크박스 */}
+                <label className="checkbox-label">
+                    <input 
+                        type="checkbox" 
+                        name="role" 
+                        checked={form.role === 'ADMIN'} 
+                        onChange={handleRoleCheckbox} 
+                    />
+                    관리자
+                </label>
+
                 <button onClick={handleSignup} disabled={loading}>
                     {loading ? '처리 중...' : '회원가입'}
                 </button>
@@ -50,16 +96,3 @@ function SignupPage() {
 }
 
 export default SignupPage;
-
-/* 응답구조
-{
-  "success": true,
-  "message": "회원가입 성공",
-  "user": {
-    "id": 123,
-    "name": "홍길동",
-    "email": "test@test.com",
-    "username": "hong123"
-  }
-}
-*/

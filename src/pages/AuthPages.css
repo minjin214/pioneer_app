@@ -19,16 +19,57 @@
 .auth-box h2 {
     text-align: center;
     margin-bottom: 1.5rem;
+    font-weight: 600;
+    color: #333;
 }
 
+/* input 공통 스타일 (name, email, username, password, grade) */
 .auth-box input {
     margin-bottom: 1rem;
     padding: 0.8rem;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 6px;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.auth-box input:focus {
+    outline: none;
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+/* position 드롭다운 전용 스타일 */
+.auth-box select[name="position"] {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    /* 기본 화살표 제거 */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* 커스텀 화살표 */
+    background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px 16px;
+    padding-right: 2.2rem;
+}
+
+.auth-box select[name="position"]:focus {
+    outline: none;
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+/* 버튼 스타일 */
 .auth-box button {
     padding: 0.8rem;
     margin-bottom: 0.8rem;
@@ -38,15 +79,45 @@
     border-radius: 6px;
     font-size: 1rem;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .auth-box button:hover {
     background-color: #357ABD;
 }
 
+.auth-box button:disabled {
+    background-color: #a0c4f7;
+    cursor: not-allowed;
+}
+
+/* 로그인 페이지 링크 */
 .auth-link {
     text-align: center;
     color: #4A90E2;
     cursor: pointer;
     font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;       
+    gap: 0.5rem;              
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    color: #333;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;               
+    flex-shrink: 0;          
+    vertical-align: middle; 
 }

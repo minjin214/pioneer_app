@@ -23,11 +23,11 @@ function LoginPage() {
         password,
       });
 
-      if (data?.success) {
+      if (data?.status) {
         const user = {
-          id: data.userId,
-          name: data.name,
-          role: data.role,
+          id: data.data.userId,
+          name: data.data.name,
+          role: data.data.role,
           username,
         };
 
