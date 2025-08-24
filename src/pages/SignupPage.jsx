@@ -12,7 +12,9 @@ function SignupPage() {
         password: '',
         grade: '',       // 학년
         position: '',     // 학위 과정
-        role: 'USER'
+        role: 'USER',
+        department: '',
+        studentNumber: ''
     });
     const [loading, setLoading] = useState(false);
 
@@ -39,7 +41,7 @@ function SignupPage() {
         e.preventDefault();
         setLoading(true);
         try {
-            await API.post("/signup", form);
+            await API.post("/api/auth/signup", form);
             alert("회원가입 성공!");
             navigate("/");
         } catch (err) {
@@ -74,6 +76,20 @@ function SignupPage() {
                     <option value="석박사">석박사</option>
                     <option value="기타">기타</option>
                 </select>
+
+                {/* ✅ department 입력 */}
+                <input
+                    name="department"
+                    placeholder="학과"
+                    onChange={handleChange}
+                />
+
+                {/* ✅ studentNumber 입력 */}
+                <input
+                    name="studentNumber"
+                    placeholder="학번"
+                    onChange={handleChange}
+                />
 
                 {/* ✅ 관리자 체크박스 */}
                 <label className="checkbox-label">
