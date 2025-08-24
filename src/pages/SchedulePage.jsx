@@ -1,129 +1,250 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
-import './SchedulePage.css';
-import API from "../api";
+import React, { useEffect, useState } from "react";
+import Calendar from "react-calendar";
+import { useNavigate } from "react-router-dom";
+import "react-calendar/dist/Calendar.css";
+import "./SchedulePage.css";
 
 function SchedulePage() {
   const navigate = useNavigate();
-  const [events, setEvents] = useState({});
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [inputValue, setInputValue] = useState('');
-  const [deletingIndex, setDeletingIndex] = useState(null);
 
-  const fetchEvents = async () => {
+  const [date, setDate] = useState(new Date());
+  const [schedules, setSchedules] = useState([]);
+  const [allSchedules, setAllSchedules] = useState([]);
+  const [expandedId, setExpandedId] = useState(null); // 아코디언 열림 상태
+
+  // 입력값
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [important, setImportant] = useState(false);
+
+  // 전체 일정 조회
+  const fetchAllSchedules = async () => {
     try {
-      const res = await API.get("/schedules");
-      // 서버 응답이 [{date:"2025-08-20", events:["MT"]}, ...] 라고 가정
-      const obj = {};
-      res.data.forEach(item => {
-        obj[item.date] = item.events;
+      const res = await fetch("http://localhost:8080/api/schedules", {
+        credentials: "include",
       });
-      setEvents(obj);
+      const data = await res.json();
+      if (data.status) setAllSchedules(data.data);
     } catch (err) {
-      console.error("일정 불러오기 실패", err);
+      console.error("전체 일정 조회 실패:", err);
+    }
+  };
+
+  // 날짜별 일정 조회
+  const fetchSchedulesByDate = async (selectedDate) => {
+    try {
+      const formatted = selectedDate.toISOString().split("T")[0];
+      const res = await fetch(
+        `http://localhost:8080/api/schedules/date/${formatted}`,
+        { credentials: "include" }
+      );
+      const data = await res.json();
+      if (data.status) setSchedules(data.data);
+    } catch (err) {
+      console.error("날짜별 일정 조회 실패:", err);
     }
   };
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    fetchAllSchedules();
+    fetchSchedulesByDate(date);
+  }, [date]);
 
-  // 날짜를 문자열(YYYY-MM-DD)로 변환하는 함수
-  const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // month는 0부터 시작
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  const tileClassName = ({ date }) => {
-    const dateStr = formatDate(date);  // UTC 대신 직접 변환
-    if (events[dateStr]) return 'special-date';
-    return null;
-  };
-
-  const handleDateClick = (date) => {
-    const dateStr = formatDate(date);  // UTC 대신 직접 변환
-    setSelectedDate(dateStr);
-    setInputValue('');
-  };
-
-  const saveEvent = async () => {
-    if (!selectedDate || !inputValue) return;
+  // 일정 등록
+  const handleAdd = async () => {
     try {
-      await API.post("/schedules", { date: selectedDate, event: inputValue });
-      fetchEvents();
-      setInputValue("");
+      const res = await fetch("http://localhost:8080/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title,
+          date: date.toISOString().split("T")[0],
+          location,
+          description,
+          important,
+        }),
+      });
+      const data = await res.json();
+      if (data.status) {
+        alert("일정 등록 성공!");
+        setTitle("");
+        setLocation("");
+        setDescription("");
+        setImportant(false);
+        fetchAllSchedules();
+        fetchSchedulesByDate(date);
+      } else {
+        alert("등록 실패: " + data.message);
+      }
     } catch (err) {
-      console.error("일정 저장 실패", err);
+      console.error("등록 실패:", err);
     }
   };
 
   // 일정 삭제
-  const deleteEvent = async (eventText) => {
+  const handleDelete = async (id) => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      await API.delete(`/schedules/${selectedDate}`, { data: { event: eventText } });
-      fetchEvents();
+      const res = await fetch(`http://localhost:8080/api/schedules/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.status) {
+        alert("삭제 성공!");
+        fetchAllSchedules();
+        fetchSchedulesByDate(date);
+      } else {
+        alert("삭제 실패: " + data.message);
+      }
     } catch (err) {
-      console.error("일정 삭제 실패", err);
+      console.error("삭제 실패:", err);
     }
+  };
+
+  // 아코디언 토글
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
   };
 
   return (
     <div className="schedule-container">
-      <button className="back-btn" onClick={() => navigate('/main')}>← 메인으로</button>
+      <button onClick={() => navigate("/main")} className="back-btn">
+        ⬅ 메인으로
+      </button>
 
-      <h2 className="page-title">📅 PIONEER 일정</h2>
+      <h2 className="page-title">📅 일정 관리</h2>
 
       <div className="content-layout">
-        {/* 왼쪽: 달력 */}
+        {/* 달력 */}
         <div className="calendar-section">
           <Calendar
-            onClickDay={handleDateClick}
-            tileClassName={tileClassName}
+            onChange={setDate}
+            value={date}
+            className="custom-calendar"
+            tileClassName={({ date }) => {
+              const d = date.toISOString().split("T")[0];
+              if (allSchedules.some((s) => s.date === d && s.important)) {
+                return "special-date"; // 중요 일정은 빨간색 칸
+              }
+              return null;
+            }}
+            tileContent={({ date }) => {
+              const d = date.toISOString().split("T")[0];
+              const hasEvent = allSchedules.some((s) => s.date === d);
+              return hasEvent ? <div className="event-dot"></div> : null;
+            }}
           />
         </div>
 
-        {/* 오른쪽: 일정 관리 */}
+        {/* 일정 목록 + 등록폼 */}
         <div className="events-section">
-        {selectedDate ? (
-          <>
-            <h3>{selectedDate} 일정</h3>
-            <input
-              type="text"
-              placeholder="일정을 입력하세요"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-            />
-            <button onClick={saveEvent}>추가</button>
+          <h3>{date.toISOString().split("T")[0]} 일정</h3>
 
-            {/* 일정 목록 */}
+          {/* 등록 폼 */}
+          <div className="schedule-form">
+            <table className="form-table">
+              <tbody>
+                <tr>
+                  <th>일시</th>
+                  <td>
+                    <input
+                      type="date"
+                      value={date.toISOString().split("T")[0]}
+                      onChange={(e) => setDate(new Date(e.target.value))}
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <th>제목</th>
+                  <td>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="제목 입력"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <th>내용</th>
+                  <td>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="설명 입력"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <th>장소</th>
+                  <td>
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="장소 입력"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <th>선택</th>
+                  <td className="checkbox-cell">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={important}
+                        onChange={(e) => setImportant(e.target.checked)}
+                      />
+                      중요 일정
+                    </label>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <button className="submit-btn" onClick={handleAdd}>
+              등록
+            </button>
+          </div>
+
+          {/* 일정 목록 */}
+          {schedules.length > 0 ? (
             <ul className="event-list">
-              {(Array.isArray(events[selectedDate]) ? events[selectedDate] : []).map((ev, idx) => (
-                <li 
-                  key={idx} 
-                  onClick={() => setDeletingIndex(idx)} 
-                  className={deletingIndex === idx ? "selected-event" : ""}
-                >
-                  {ev}
+              {schedules.map((event) => (
+                <li key={event.scheduleId}>
+                  <div
+                    className="event-title"
+                    onClick={() => toggleExpand(event.scheduleId)}
+                  >
+                    <b>{event.title}</b>
+                    {event.important && (
+                      <span style={{ color: "red", marginLeft: "6px" }}>
+                        ⚠ 중요
+                      </span>
+                    )}
+                  </div>
+
+                  {expandedId === event.scheduleId && (
+                    <div className="event-details">
+                      <p>📅 일시: {event.date}</p>
+                      <p>📍 장소: {event.location}</p>
+                      <p>📝 내용: {event.description}</p>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDelete(event.scheduleId)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
-
-            {/* 삭제 버튼 (선택된 일정이 있을 때만) */}
-            {deletingIndex !== null && (
-              <button 
-                className="delete-btn" 
-                onClick={() => deleteEvent(events[selectedDate][deletingIndex])}>
-                삭제하기
-              </button>
-            )}
-          </>
-        ) : (
-          <p className="placeholder-text">날짜를 선택하면 일정 추가가 가능합니다.</p>
-        )}
+          ) : (
+            <p className="placeholder-text">이 날짜에는 일정이 없습니다.</p>
+          )}
         </div>
       </div>
     </div>
@@ -131,30 +252,3 @@ function SchedulePage() {
 }
 
 export default SchedulePage;
-
-/* 응답구조
-[
-  {
-    "date": "2025-08-20",
-    "events": ["회식", "MT"]
-  },
-  {
-    "date": "2025-08-21",
-    "events": ["스터디"]
-  }
-]
-
-{
-  "success": true,
-  "message": "일정 추가 완료",
-  "event": "회식",
-  "date": "2025-08-20"
-}
-
-{
-  "success": true,
-  "message": "일정 삭제 완료",
-  "event": "회식",
-  "date": "2025-08-20"
-}
-*/

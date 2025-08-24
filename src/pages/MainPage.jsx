@@ -1,25 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './MainPage.css';
 import { useNavigate } from 'react-router-dom';
 
 function MainPage() {
     const navigate = useNavigate();
+    const [userName, setUserName] = useState(''); // 사용자 이름 저장
 
-    const hangleLogout =() => {
+    const handleLogout = () => {
         localStorage.removeItem('authToken');
         sessionStorage.removeItem('authToken');
         navigate('/');
     };
 
+    // 로그인한 사용자 이름 불러오기
+    useEffect(() => {
+        fetch('/api/me/name', {
+            method: 'GET',
+            credentials: 'include' // ✅ 세션 쿠키 같이 전송
+        })
+            .then(res => res.json())
+            .then(data => setUserName(data.data.name)) // ✅ 응답에서 name 값 저장
+            .catch(err => console.error(err));
+    }, []);
+
     return(
         <div className="main-container">
-            <button onClick={hangleLogout} className='logout-btn'>로그아웃</button>
+            <button onClick={handleLogout} className='logout-btn'>로그아웃</button>
             
             <div className='welcome-message'>
                 <h2>환영합니다!</h2>
-                <p>ooo님,</p>
+                {/* ✅ userName이 있을 때만 표시 */}
+                <p>{userName && `${userName}님,`}</p>
                 <p>오늘도 좋은 하루되세요</p>
             </div>
+
             <div className='right-section'>
                 <div className='lab-manage'>
                     <h2>연구실 관리</h2>
