@@ -14,7 +14,7 @@ function MainPage() {
 
     // 로그인한 사용자 이름 불러오기
     useEffect(() => {
-        fetch('/api/me/name', {
+        fetch('/api/auth/me/name', {
             method: 'GET',
             credentials: 'include' // ✅ 세션 쿠키 같이 전송
         })
