@@ -1,421 +1,307 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState, useCallback } from "react";
+import API from "../api";
+import { useNavigate } from "react-router-dom";
 import "./AssignmentPage.css";
 
-export function AssignmentPage({ isAdmin = true, currentUser }) {
+function AssignmentPage() {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
 
-  // 현재 로그인 사용자 (없으면 예시)
-  const user = currentUser ?? { id: "u-0001", name: "홍길동" };
+  const [assignments, setAssignments] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [mySubmission, setMySubmission] = useState(null);
 
-  // URL -> 카테고리
-  const category = (() => {
-    if (pathname.startsWith("/programming")) return "programming";
-    if (pathname.startsWith("/study")) return "study";
-    if (pathname.startsWith("/project")) return "project";
-    return "programming";
-  })();
-
-  const TITLE = {
-    programming: "프로그래밍 과제",
-    study: "스터디 과제",
-    project: "프로젝트 과제",
-  }[category];
-
-  const STORAGE_KEY = `assign_${category}_v1`;
-  const SELECTED_KEY = `${STORAGE_KEY}__selected`;
-
-  // 초기 더미 과제
-  const seed = {
-    programming: [
-      { id: "p-1", title: "프로그래밍 #1", dueDate: "2025-08-27", submissions: [] },
-    ],
-    study: [
-      { id: "s-1", title: "스터디 #1", dueDate: "2025-08-27", submissions: [] },
-    ],
-    project: [
-      { id: "pr-1", title: "프로젝트 #1", dueDate: "2025-08-27", submissions: [] },
-    ],
-  }[category];
-
-  // 목록 로드/저장
-  const [list, setList] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : seed;
-    } catch {
-      return seed;
-    }
+  const [filterType, setFilterType] = useState("");
+  const [newAssignment, setNewAssignment] = useState({
+    title: "",
+    description: "",
+    type: "REPORT",
+    dueDate: ""
+  });
+  const [newSubmission, setNewSubmission] = useState({
+    assignmentId: "",
+    userId: "",
+    link: ""
   });
 
-  useEffect(() => {
+  // 과제 목록 불러오기
+  const fetchAssignments = useCallback(async () => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const next = raw ? JSON.parse(raw) : seed;
-      setList(next);
-
-      const savedSel = localStorage.getItem(SELECTED_KEY);
-      if (savedSel && next.some((a) => a.id === savedSel)) {
-        setSelectedId(savedSel);
-      } else {
-        setSelectedId(next[0]?.id ?? null);
-      }
-    } catch {
-      setList(seed);
-      setSelectedId(seed[0]?.id ?? null);
+      let url = "/api/assignments";
+      if (filterType) url += `?type=${filterType}`;
+      const res = await API.get(url);
+      setAssignments(res.data.data);
+    } catch (err) {
+      console.error("과제 목록 조회 실패:", err);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]); // category만 감시 (STORAGE_KEY/seed는 category로부터 파생)
+  }, [filterType]);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  }, [list, STORAGE_KEY]);
-
-  // 선택/입력 상태
-  const [selectedId, setSelectedId] = useState(list[0]?.id ?? null);
-  const [newTitle, setNewTitle] = useState("");
-  const [newDue, setNewDue] = useState("");
-  const [submitUrl, setSubmitUrl] = useState("");
-
-  useEffect(() => {
-    if (selectedId && !list.find((a) => a.id === selectedId)) {
-      setSelectedId(list[0]?.id ?? null);
-    }
-  }, [list, selectedId]);
-
-  useEffect(() => {
-    if (selectedId) localStorage.setItem(SELECTED_KEY, selectedId);
-  }, [selectedId, SELECTED_KEY]);
-
-  const selected = useMemo(
-    () => list.find((a) => a.id === selectedId) || null,
-    [list, selectedId]
-  );
-
-  // URL 유효성
-  const isValidUrl = (u) => {
+  // 특정 과제 제출 목록 (관리자)
+  const fetchSubmissions = async (assignmentId) => {
     try {
-      const x = new URL(u);
-      return ["http:", "https:"].includes(x.protocol);
-    } catch {
-      return false;
+      const res = await API.get(`/api/assignments/${assignmentId}/submissions`);
+      setSubmissions(res.data.data);
+    } catch (err) {
+      console.error("제출 목록 조회 실패:", err);
     }
   };
 
-  // 과제 추가(관리자)
-  const addAssignment = (e) => {
-    e.preventDefault();
-    if (!newTitle || !newDue) return;
-    setList((prev) => [
-      { id: `${Date.now()}`, title: newTitle.trim(), dueDate: newDue, submissions: [] },
-      ...prev,
-    ]);
-    setNewTitle("");
-    setNewDue("");
-  };
-
-  // 제출(사용자) — 재제출 시 내 제출 덮어쓰기
-  const submitLink = (e) => {
-    e.preventDefault();
-    if (!selected) return;
-    if (!isValidUrl(submitUrl)) {
-      alert("http/https 링크를 입력하세요.");
+  // 내 제출 조회
+  const fetchMySubmission = async () => {
+    if (!newSubmission.assignmentId || !newSubmission.userId) {
+      alert("assignmentId와 userId를 입력하세요.");
       return;
     }
-    setList((prev) =>
-      prev.map((a) => {
-        if (a.id !== selected.id) return a;
-        const next = [...a.submissions];
-        const idx = next.findIndex((s) => s.userId === user.id);
-        const payload = {
-          userId: user.id,
-          userName: user.name,
-          url: submitUrl.trim(),
-          submittedAt: new Date().toISOString(),
-          status: "제출됨", // 기본 상태
-          score: null,
-          note: "",
-        };
-        if (idx >= 0) next[idx] = payload;
-        else next.unshift(payload);
-        return { ...a, submissions: next };
-      })
-    );
-    setSubmitUrl("");
-  };
-
-  // 관리자: 상태/점수/메모 수정
-  const updateSubmission = (userId, patch) => {
-    setList((prev) =>
-      prev.map((a) =>
-        a.id !== selected?.id
-          ? a
-          : {
-              ...a,
-              submissions: a.submissions.map((s) =>
-                s.userId === userId ? { ...s, ...patch } : s
-              ),
-            }
-      )
-    );
-  };
-
-  // ====== [추가] 삭제 관련 ======
-
-  // 과제 삭제 (관리자)
-  const deleteAssignment = (id) => {
-    if (!window.confirm("이 과제를 삭제할까요? 관련 제출도 함께 사라집니다.")) return;
-    setList((prev) => prev.filter((a) => a.id !== id));
-    if (selectedId === id) {
-      setSelectedId(null); // useEffect가 자동으로 첫 항목으로 보정
+    try {
+      const res = await API.get(
+        `/api/submissions/mine?assignmentId=${newSubmission.assignmentId}&userId=${newSubmission.userId}`
+      );
+      setMySubmission(res.data.data);
+    } catch (err) {
+      console.error("내 제출 조회 실패:", err);
+      alert("내 제출 없음");
     }
   };
 
-  // 내 제출 삭제 (학생/관리자 공통)
-  const deleteMySubmission = () => {
-    if (!selected) return;
-    if (!window.confirm("내 제출을 삭제할까요? 되돌릴 수 없습니다.")) return;
-    setList((prev) =>
-      prev.map((a) =>
-        a.id !== selected.id
-          ? a
-          : { ...a, submissions: a.submissions.filter((s) => s.userId !== user.id) }
-      )
-    );
+  // 과제 등록 (관리자)
+  const createAssignment = async () => {
+    try {
+      await API.post("/api/assignments", newAssignment);
+      alert("과제 등록 완료");
+      setNewAssignment({ title: "", description: "", type: "REPORT", dueDate: "" });
+      fetchAssignments();
+    } catch (err) {
+      console.error("과제 등록 실패:", err);
+    }
   };
 
-  // 특정 사용자 제출 삭제 (관리자)
-  const deleteSubmissionByUser = (userId) => {
-    if (!selected) return;
-    if (!window.confirm("이 제출을 삭제할까요?")) return;
-    setList((prev) =>
-      prev.map((a) =>
-        a.id !== selected.id
-          ? a
-          : { ...a, submissions: a.submissions.filter((s) => s.userId !== userId) }
-      )
-    );
+  // 과제 제출
+  const submitAssignment = async () => {
+    try {
+      await API.post("/api/submissions", newSubmission);
+      alert("과제 제출 완료");
+      setNewSubmission({ assignmentId: "", userId: "", link: "" });
+    } catch (err) {
+      console.error("과제 제출 실패:", err);
+    }
   };
+
+  // 채점 (제출 목록에서 바로)
+  const gradeSubmission = async (submissionId, assignmentId, score) => {
+    if (!score || score < 1 || score > 100) {
+      alert("점수는 1~100 사이여야 합니다.");
+      return;
+    }
+    try {
+      await API.post(`/api/submissions/${submissionId}/grade`, {
+        score: parseInt(score)
+      });
+      alert("채점 완료");
+      fetchSubmissions(assignmentId);
+    } catch (err) {
+      console.error("채점 실패:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [fetchAssignments]);
 
   return (
-    <div className="assign-container">
+    <div className="assignment-container">
       <button className="back-btn" onClick={() => navigate("/main")}>
-        ← 메인으로
+        ⬅ 메인으로
       </button>
-      <h2>📋 {TITLE}</h2>
 
-      <div className="assign-grid">
-        {/* 왼쪽: 과제 목록 + 추가 */}
-        <aside className="panel">
-          <h3>과제 목록</h3>
-          <ul className="assn-list">
-            {list.map((a) => (
-              <li key={a.id} className="assn-row">
-                <button
-                  className={`assn-item ${selectedId === a.id ? "selected" : ""}`}
-                  onClick={() => setSelectedId(a.id)}
-                >
-                  <span className="title">{a.title}</span>
-                  <span className="due">마감: {a.dueDate}</span>
+      <h1 className="assignment-title">과제 관리</h1>
+
+      {/* 과제 목록 필터 */}
+      <div className="assignment-filters">
+        <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+          <option value="">전체</option>
+          <option value="REPORT">보고서</option>
+          <option value="HOMEWORK">과제</option>
+          <option value="PROJECT">프로젝트</option>
+        </select>
+        <button onClick={fetchAssignments}>조회</button>
+      </div>
+
+      {/* 과제 목록 */}
+      <table className="assignment-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>제목</th>
+            <th>타입</th>
+            <th>마감일</th>
+            <th>조회</th>
+          </tr>
+        </thead>
+        <tbody>
+          {assignments.map((a) => (
+            <tr key={a.assignmentId}>
+              <td>{a.assignmentId}</td>
+              <td>{a.title}</td>
+              <td>{a.type}</td>
+              <td>{a.deadline}</td>
+              <td>
+                <button onClick={() => fetchSubmissions(a.assignmentId)}>
+                  제출 목록 보기
                 </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-                {isAdmin && (
-                  <button
-                    className="danger small ml8"
-                    title="과제 삭제"
-                    onClick={(e) => {
-                      e.stopPropagation(); // 선택 클릭 방지
-                      deleteAssignment(a.id);
-                    }}
-                  >
-                    과제 삭제
-                  </button>
-                )}
-              </li>
-            ))}
-            {list.length === 0 && <li className="muted">과제가 없습니다.</li>}
-          </ul>
+      {/* 제출 목록 (관리자) */}
+      {submissions.length > 0 && (
+        <div className="submission-section">
+          <h3>제출 목록</h3>
+          <table className="assignment-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>유저</th>
+                <th>링크</th>
+                <th>점수</th>
+                <th>상태</th>
+                <th>채점</th>
+              </tr>
+            </thead>
+            <tbody>
+              {submissions.map((s) => (
+                <tr key={s.submissionId}>
+                  <td>{s.submissionId}</td>
+                  <td>{s.user?.name}</td>
+                  <td>
+                    <a href={s.link} target="_blank" rel="noreferrer">
+                      {s.link}
+                    </a>
+                  </td>
+                  <td>{s.score ?? "-"}</td>
+                  <td>{s.status}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      placeholder="점수"
+                      style={{ width: "60px", marginRight: "5px" }}
+                      value={s.tempScore ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSubmissions((prev) =>
+                          prev.map((sub) =>
+                            sub.submissionId === s.submissionId
+                              ? { ...sub, tempScore: value }
+                              : sub
+                          )
+                        );
+                      }}
+                    />
+                    <button
+                      onClick={() =>
+                        gradeSubmission(
+                          s.submissionId,
+                          s.assignment.assignmentId,
+                          s.tempScore
+                        )
+                      }
+                    >
+                      채점
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-          {isAdmin && (
-            <>
-              <h4 className="mt12">새 과제 추가</h4>
-              <form className="row" onSubmit={addAssignment}>
-                <input
-                  type="text"
-                  placeholder="과제 제목"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  required
-                />
-                <input
-                  type="date"
-                  value={newDue}
-                  onChange={(e) => setNewDue(e.target.value)}
-                  required
-                />
-                <button className="primary">추가</button>
-              </form>
-            </>
-          )}
-        </aside>
+      {/* 과제 제출 */}
+      <div className="assignment-submit">
+        <h3>과제 제출</h3>
+        <input
+          type="text"
+          placeholder="과제 ID"
+          value={newSubmission.assignmentId}
+          onChange={(e) =>
+            setNewSubmission({ ...newSubmission, assignmentId: e.target.value })
+          }
+        />
+        <input
+          type="text"
+          placeholder="유저 ID"
+          value={newSubmission.userId}
+          onChange={(e) =>
+            setNewSubmission({ ...newSubmission, userId: e.target.value })
+          }
+        />
+        <input
+          type="text"
+          placeholder="제출 링크"
+          value={newSubmission.link}
+          onChange={(e) =>
+            setNewSubmission({ ...newSubmission, link: e.target.value })
+          }
+        />
+        <button onClick={submitAssignment}>제출</button>
+        <button onClick={fetchMySubmission}>내 제출 조회</button>
+      </div>
 
-        {/* 오른쪽: 상세/제출/현황 */}
-        <main className="panel">
-          {!selected ? (
-            <p className="muted">왼쪽에서 과제를 선택하세요.</p>
-          ) : (
-            <>
-              <div className="row space-between">
-                <div>
-                  <h3>{selected.title}</h3>
-                  <p className="muted">마감일: {selected.dueDate}</p>
-                </div>
+      {/* 내 제출 */}
+      {mySubmission && (
+        <div className="my-submission">
+          <h3>내 제출</h3>
+          <p>과제 ID: {mySubmission.assignment.assignmentId}</p>
+          <p>
+            링크:{" "}
+            <a href={mySubmission.link} target="_blank" rel="noreferrer">
+              {mySubmission.link}
+            </a>
+          </p>
+          <p>점수: {mySubmission.score ?? "-"}</p>
+          <p>상태: {mySubmission.status}</p>
+        </div>
+      )}
 
-                {isAdmin && (
-                  <button
-                    className="danger"
-                    onClick={() => deleteAssignment(selected.id)}
-                    title="현재 과제 삭제"
-                  >
-                    제출 취소
-                  </button>
-                )}
-              </div>
-
-              <h4 className="mt12">과제 링크 제출</h4>
-              <form className="row" onSubmit={submitLink}>
-                <input
-                  type="url"
-                  placeholder="https:// 제출 링크"
-                  value={submitUrl}
-                  onChange={(e) => setSubmitUrl(e.target.value)}
-                  required
-                />
-                <button className="primary">제출</button>
-              </form>
-
-              {/* 내 제출 요약 + 내 제출 삭제 */}
-              {selected.submissions.some((s) => s.userId === user.id) && (
-                <div className="mine-box">
-                  {selected.submissions
-                    .filter((s) => s.userId === user.id)
-                    .slice(0, 1)
-                    .map((s) => (
-                      <div key={s.userId} className="mine">
-                        <a href={s.url} target="_blank" rel="noreferrer">
-                          {s.url}
-                        </a>
-                        <span className="badge">{s.status}</span>
-                        <span className="muted">
-                          {new Date(s.submittedAt).toLocaleString()}
-                        </span>
-                        <div className="muted">
-                          채점: {s.score != null ? `${s.score}점` : "없음"}{" "}
-                          {s.note && `(${s.note})`}
-                        </div>
-
-                        <div className="mt8">
-                          <button className="danger small" onClick={deleteMySubmission}>
-                            내 제출 삭제
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-
-              {isAdmin && (
-                <>
-                  <h4 className="mt12">제출 현황 / 채점</h4>
-                  {selected.submissions.length === 0 ? (
-                    <p className="muted">제출이 없습니다.</p>
-                  ) : (
-                    <table className="assn-table">
-                      <thead>
-                        <tr>
-                          <th>이름</th>
-                          <th>링크</th>
-                          <th>제출 시각</th>
-                          <th>상태</th>
-                          <th>점수</th>
-                          <th>메모</th>
-                          <th>관리</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selected.submissions.map((s) => (
-                          <tr key={s.userId}>
-                            <td>{s.userName}</td>
-                            <td className="url">
-                              <a href={s.url} target="_blank" rel="noreferrer">
-                                {s.url}
-                              </a>
-                            </td>
-                            <td>{new Date(s.submittedAt).toLocaleString()}</td>
-                            <td>
-                              <select
-                                value={s.status}
-                                onChange={(e) =>
-                                  updateSubmission(s.userId, {
-                                    status: e.target.value,
-                                  })
-                                }
-                              >
-                                <option>제출됨</option>
-                                <option>검토중</option>
-                                <option>확인됨</option>
-                                <option>반려</option>
-                              </select>
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                placeholder="-"
-                                value={s.score ?? ""}
-                                onChange={(e) =>
-                                  updateSubmission(s.userId, {
-                                    score:
-                                      e.target.value === ""
-                                        ? null
-                                        : Number(e.target.value),
-                                  })
-                                }
-                                className="score"
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                placeholder="메모"
-                                value={s.note || ""}
-                                onChange={(e) =>
-                                  updateSubmission(s.userId, {
-                                    note: e.target.value,
-                                  })
-                                }
-                              />
-                            </td>
-                            <td>
-                              <button
-                                className="danger small"
-                                onClick={() => deleteSubmissionByUser(s.userId)}
-                              >
-                                삭제
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </main>
+      {/* ✅ 과제 등록 (맨 아래로 이동) */}
+      <div className="assignment-create">
+        <h3>과제 등록 (관리자)</h3>
+        <input
+          type="text"
+          placeholder="제목"
+          value={newAssignment.title}
+          onChange={(e) =>
+            setNewAssignment({ ...newAssignment, title: e.target.value })
+          }
+        />
+        <input
+          type="text"
+          placeholder="설명"
+          value={newAssignment.description}
+          onChange={(e) =>
+            setNewAssignment({ ...newAssignment, description: e.target.value })
+          }
+        />
+        <select
+          value={newAssignment.type}
+          onChange={(e) =>
+            setNewAssignment({ ...newAssignment, type: e.target.value })
+          }
+        >
+          <option value="REPORT">보고서</option>
+          <option value="HOMEWORK">과제</option>
+          <option value="PROJECT">프로젝트</option>
+        </select>
+        <input
+          type="date"
+          value={newAssignment.dueDate}
+          onChange={(e) =>
+            setNewAssignment({ ...newAssignment, dueDate: e.target.value })
+          }
+        />
+        <button onClick={createAssignment}>등록</button>
       </div>
     </div>
   );

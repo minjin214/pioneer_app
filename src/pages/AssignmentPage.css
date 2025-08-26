@@ -1,81 +1,134 @@
-.assign-container { padding: 2rem; }
-.back-btn { margin-bottom: 8px; }
-
-.assign-grid {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 16px;
+/* 페이지 전체 */
+.assignment-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
-.panel {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 16px;
-  background: #fff;
+.back-btn {
+  margin-bottom: 10px;
+  padding: 5px 10px;
 }
 
-.assn-list { list-style: none; padding: 0; margin: 0; }
-.assn-item {
+.assignment-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* 필터 영역 */
+.assignment-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.assignment-filters select,
+.assignment-filters button {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.assignment-filters button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.assignment-filters button:hover {
+  background-color: #0056b3;
+}
+
+/* 테이블 공통 */
+.assignment-table {
   width: 100%;
-  text-align: left;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  background: #fff;
-  cursor: pointer;
+  border-collapse: collapse;
+  margin-bottom: 20px;
 }
-.assn-item.selected { border-color: #2563eb; outline: 2px solid #e0e7ff; }
-.assn-item .title { display: block; font-weight: 600; }
-.assn-item .due { font-size: .9rem; color: #6b7280; }
 
-.danger {
+.assignment-table th,
+.assignment-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.assignment-table th {
+  background-color: #f4f4f4;
+}
+
+.assignment-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* 섹션 구분 */
+.submission-section,
+.assignment-create,
+.assignment-submit,
+.my-submission,
+.assignment-grade {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+}
+
+.submission-section h3,
+.assignment-create h3,
+.assignment-submit h3,
+.my-submission h3,
+.assignment-grade h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+/* 입력 폼 */
+.assignment-create input,
+.assignment-create select,
+.assignment-create button,
+.assignment-submit input,
+.assignment-submit button,
+.assignment-grade input,
+.assignment-grade button {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+/* 버튼 색상 */
+.assignment-create button,
+.assignment-submit button,
+.assignment-grade button {
+  background-color: #28a745;
+  color: white;
   border: none;
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: #ef4444;
-  color: #fff;
   cursor: pointer;
-}
-.danger:hover { background: #dc2626; }
-.danger:disabled { opacity: .6; cursor: not-allowed; }
-
-.small { font-size: .875rem; padding: 10px 12px; }
-
-.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.row input[type="text"],
-.row input[type="date"],
-.row input[type="url"] {
-  flex: 1 1 240px;
-  padding: 10px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  transition: background 0.2s;
 }
 
-.primary {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  background: #2563eb;
-  color: #fff;
-  cursor: pointer;
+.assignment-create button:hover,
+.assignment-submit button:hover,
+.assignment-grade button:hover {
+  background-color: #218838;
 }
 
-.muted { color: #6b7280; }
-.mt12 { margin-top: 12px; }
-
-.mine-box { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
-.badge {
-  display: inline-block; padding: 2px 8px;
-  background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 999px;
-  font-size: .85rem; margin-left: 6px;
+/* 내 제출 */
+.my-submission p {
+  margin: 5px 0;
 }
 
-.assn-table { width: 100%; border-collapse: collapse; }
-.assn-table th, .assn-table td {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 8px;
-  text-align: left;
+.my-submission a {
+  color: #007bff;
+  text-decoration: none;
 }
-.assn-table .url a { word-break: break-all; }
-.score { width: 70px; }
+
+.my-submission a:hover {
+  text-decoration: underline;
+}

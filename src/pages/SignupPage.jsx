@@ -32,7 +32,7 @@ function SignupPage() {
         setForm({ ...form, position: mapping[e.target.value] });
     };
 
-    // ✅ 체크박스 핸들러
+    // 체크박스 핸들러
     const handleRoleCheckbox = (e) => {
         setForm({ ...form, role: e.target.checked ? 'ADMIN' : 'USER' });
     };
@@ -77,21 +77,21 @@ function SignupPage() {
                     <option value="기타">기타</option>
                 </select>
 
-                {/* ✅ department 입력 */}
+                {/* department 입력 */}
                 <input
                     name="department"
                     placeholder="학과"
                     onChange={handleChange}
                 />
 
-                {/* ✅ studentNumber 입력 */}
+                {/* studentNumber 입력 */}
                 <input
                     name="studentNumber"
                     placeholder="학번"
                     onChange={handleChange}
                 />
 
-                {/* ✅ 관리자 체크박스 */}
+                {/* 관리자 체크박스 */}
                 <label className="checkbox-label">
                     <input 
                         type="checkbox" 

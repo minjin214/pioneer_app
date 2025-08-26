@@ -1,83 +1,101 @@
 .main-container {
-    display: flex;
-    gap: 20px;
-    padding: 2rem;
-    background-color: #f8f9fa;
-    box-sizing: border-box;
-  }
-  
+  display: flex;
+  gap: 20px;
+  padding: 3rem;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* 왼쪽 컬럼: 인사말 + 내 정보 */
+.left-section {
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+  gap: 15px; /* 인사말과 내 정보 간격 */
+  margin-top: 1rem;
+}
+
+/* 인사말 박스 */
 .welcome-message {
-    width: 30%;
-    height: 25vh; 
-    background-color: #f0f0f0;
-    padding: 20px;
-    box-sizing: border-box;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    overflow-y: auto;
-    margin-top: 1rem;
+  background-color: #f0f0f0;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  text-align: center;
 }
-  
+
+/* 내 정보 박스 */
+.user-info {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  font-size: 0.9rem;   /* 글씨 작게 */
+  line-height: 1.4;
+}
+
+.user-info h3 {
+  font-size: 1rem;
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+/* 오른쪽 영역 */
 .right-section {
-    display: flex;
-    width: 70%;  
-    height: 50vh;
-    gap: 20px;
+  display: flex;
+  flex-direction: row;
+  width: 70%;  
+  height: 70vh;
+  gap: 20px;
 }
-  
+
 .lab-manage, 
 .task-check {
-    flex: 1;
-    background-color: #d0e6f6;
-    padding: 20px;
-    box-sizing: border-box;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    overflow-y: auto;
-    margin-top: 0.5rem;
+  flex: 1;
+  background-color: #d0e6f6;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  margin-top: 0.5rem;
 }
 
-.main-container h2 {
-    margin-bottom: 1rem;
+/* 버튼 스타일 */
+.right-section button {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.lab-manage ul,
-.task-check ul {
-    list-style: none;
-    padding: 0;
+.right-section button:hover {
+  background-color: #0056b3;
 }
 
-.lab-manage li,
-.task-check li {
-    margin-bottom: 0.8rem;
-    font-size: 1rem;
-}
-
+/* 로그아웃 버튼 */
 .logout-btn {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer; 
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer; 
 }
 
-.back-btn {
-    position: absolute;
-    top: 10px;
-    right: 80px;
-    padding: 5px 10px;
-    font-size: 0.9rem;
-    background-color: #ddd;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .back-btn:hover {
-    background-color: #bbb;
-  }
+.logout-btn:hover {
+  background-color: #c82333;
+}
