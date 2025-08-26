@@ -16,6 +16,38 @@
   margin-bottom: 20px;
 }
 
+/* ✅ 출석 등록 영역 */
+.attendance-create {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  align-items: center;
+}
+
+.attendance-create input,
+.attendance-create select,
+.attendance-create button {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.attendance-create button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.attendance-create button:hover {
+  background-color: #218838;
+}
+
 /* 검색 영역 */
 .attendance-filters {
   display: flex;

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import Calendar from "react-calendar";   // ✅ 달력 라이브러리
+import Calendar from "react-calendar";   // 달력 라이브러리
 import "react-calendar/dist/Calendar.css";
 import "./AttendancePage.css";
 import { useNavigate } from 'react-router-dom';
+import API from "../api";
 
 function AttendancePage() {
   const navigate = useNavigate();
@@ -14,10 +14,18 @@ function AttendancePage() {
   const [editReason, setEditReason] = useState({});
   const [calendarDate, setCalendarDate] = useState(new Date());
 
+  // 출석 등록 입력 상태 추가
+  const [newAttendance, setNewAttendance] = useState({
+    userId: "",
+    date: "",
+    status: "ATTEND",
+    reason: ""
+  });
+
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/attendances");
+      const res = await API.get("/api/attendances");
       setAttendances(res.data.data);
     } catch (err) {
       console.error(err);
@@ -29,7 +37,7 @@ function AttendancePage() {
     if (!filterUserId) return;
     setLoading(true);
     try {
-      const res = await axios.get(`/api/attendances/user/${filterUserId}`);
+      const res = await API.get(`/api/attendances/user/${filterUserId}`);
       setAttendances(res.data.data);
     } catch (err) {
       console.error(err);
@@ -41,7 +49,7 @@ function AttendancePage() {
     if (!date) return;
     setLoading(true);
     try {
-      const res = await axios.get(`/api/attendances/date/${date}`);
+      const res = await API.get(`/api/attendances/date/${date}`);
       setAttendances(res.data.data);
     } catch (err) {
       console.error(err);
@@ -51,7 +59,7 @@ function AttendancePage() {
 
   const updateStatus = async (id, status) => {
     try {
-      await axios.patch(`/api/attendances/${id}`, { status });
+      await API.patch(`/api/attendances/${id}`, { status });
       fetchAll();
     } catch (err) {
       console.error(err);
@@ -60,7 +68,7 @@ function AttendancePage() {
 
   const saveReason = async (id) => {
     try {
-      await axios.post(`/api/attendances/${id}/reason`, {
+      await API.post(`/api/attendances/${id}/reason`, {
         reason: editReason[id],
       });
       setEditReason((prev) => ({ ...prev, [id]: "" }));
@@ -78,6 +86,23 @@ function AttendancePage() {
     fetchByDate(isoDate);
   };
 
+  // ⭐ 출석 등록 API
+  const createAttendance = async () => {
+    if (!newAttendance.userId || !newAttendance.date) {
+      alert("유저 ID와 날짜는 필수입니다.");
+      return;
+    }
+    try {
+      await API.post("/api/attendances", newAttendance);
+      alert("출석 등록 성공");
+      setNewAttendance({ userId: "", date: "", status: "ATTEND", reason: "" }); // 입력창 초기화
+      fetchAll();
+    } catch (err) {
+      console.error(err);
+      alert("출석 등록 실패");
+    }
+  };
+
   useEffect(() => {
     fetchAll();
   }, []);
@@ -88,9 +113,41 @@ function AttendancePage() {
 
       <h1 className="attendance-title">출석 관리</h1>
 
+
       {/* 달력 */}
       <div className="calendar-box">
         <Calendar onChange={onCalendarChange} value={calendarDate} />
+      </div>
+
+      {/*  출석 등록 Form */}
+      <div className="attendance-create">
+        <h3>출석 등록</h3>
+        <input
+          type="text"
+          placeholder="유저 ID"
+          value={newAttendance.userId}
+          onChange={(e) => setNewAttendance({ ...newAttendance, userId: e.target.value })}
+        />
+        <input
+          type="date"
+          value={newAttendance.date}
+          onChange={(e) => setNewAttendance({ ...newAttendance, date: e.target.value })}
+        />
+        <select
+          value={newAttendance.status}
+          onChange={(e) => setNewAttendance({ ...newAttendance, status: e.target.value })}
+        >
+          <option value="ATTEND">참석</option>
+          <option value="ABSENT">불참</option>
+          <option value="UNKNOWN">미정</option>
+        </select>
+        <input
+          type="text"
+          placeholder="사유"
+          value={newAttendance.reason}
+          onChange={(e) => setNewAttendance({ ...newAttendance, reason: e.target.value })}
+        />
+        <button onClick={createAttendance}>등록</button>
       </div>
 
       {/* 검색 필터 */}
@@ -143,8 +200,8 @@ function AttendancePage() {
                         e.target.value === "참석"
                           ? "ATTEND"
                           : e.target.value === "불참"
-                          ? "ABSENT"
-                          : "UNKNOWN"
+                            ? "ABSENT"
+                            : "UNKNOWN"
                       )
                     }
                   >
