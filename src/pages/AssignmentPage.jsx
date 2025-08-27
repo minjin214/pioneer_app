@@ -118,8 +118,8 @@ function AssignmentPage() {
       <div className="assignment-filters">
         <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
           <option value="">전체</option>
-          <option value="REPORT">보고서</option>
-          <option value="HOMEWORK">과제</option>
+          <option value="STUDY">스터디</option>
+          <option value="PROGRAMMING">프로그래밍</option>
           <option value="PROJECT">프로젝트</option>
         </select>
         <button onClick={fetchAssignments}>조회</button>
@@ -290,8 +290,8 @@ function AssignmentPage() {
             setNewAssignment({ ...newAssignment, type: e.target.value })
           }
         >
-          <option value="REPORT">보고서</option>
-          <option value="HOMEWORK">과제</option>
+          <option value="STUDY">스터디</option>
+          <option value="PROGRAMMING">프로그래밍</option>
           <option value="PROJECT">프로젝트</option>
         </select>
         <input
